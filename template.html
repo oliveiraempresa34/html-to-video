@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clube da Cidade - WhatsApp Style Animation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #E5DDD5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Background fixo que funciona no mobile */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #E5DDD5;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -1;
+        }
+
+        .header {
+            background: #1E7165;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+        }
+
+        .header h1 {
+            font-family: 'Roboto', sans-serif;
+            color: #ffffff;
+            font-size: 25px;
+            font-weight: 650;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            max-width: 700px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-bottom: 20px;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* MENSAGENS DO LADO ESQUERDO (FOTOS RECEBIDAS) */
+        .message-left {
+            display: flex;
+            justify-content: flex-start;
+            animation: slideInLeft 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .message-bubble-left {
+            background: #FFFFFF;
+            padding: 4px;
+            border-radius: 8px;
+            max-width: 75%;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+
+        .message-bubble-left::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 0;
+            height: 0;
+            border-right: 8px solid #FFFFFF;
+            border-top: 8px solid #FFFFFF;
+            border-left: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+        }
+
+        /* MENSAGENS DO LADO DIREITO (TEXTO ENVIADO) */
+        .message-right {
+            display: flex;
+            justify-content: flex-end;
+            animation: slideInRight 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .message-bubble-right {
+            background: #DCF8C6;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 75%;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+
+        .message-bubble-right::before {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 0;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #DCF8C6;
+            border-top: 8px solid #DCF8C6;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+        }
+
+        .photo-container {
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            position: relative;
+            animation: photoBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .photo {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .message-text {
+            color: #000;
+            font-size: 35px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message-info {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 3px;
+    font-size: 15px;
+    color: #667781;
+}
+
+        .check-marks {
+    color: #53BDEB;
+    font-weight: bold;
+    font-size: 20px;
+    letter-spacing: -5px;
+}
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes photoBounce {
+            0% {
+                transform: scale(0.3) rotate(-5deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05) rotate(2deg);
+            }
+            70% {
+                transform: scale(0.95) rotate(-1deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        /* Delays para animações sequenciais - Foto + Mensagem */
+        .message-left:nth-child(1) { animation-delay: 0.5s; }
+        .message-right:nth-child(2) { animation-delay: 1.5s; }
+        
+        .message-left:nth-child(3) { animation-delay: 2.5s; }
+        .message-right:nth-child(4) { animation-delay: 3.5s; }
+        
+        .message-left:nth-child(5) { animation-delay: 4.5s; }
+        .message-right:nth-child(6) { animation-delay: 5.5s; }
+        
+        .message-left:nth-child(7) { animation-delay: 6.5s; }
+        .message-right:nth-child(8) { animation-delay: 7.5s; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            🔥CLUBE DA CIDADE
+        </h1>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        <!-- Foto 1 -->
+        <div class="message-left">
+            <div class="message-bubble-left">
+                <div class="photo-container">
+                    <img src="https://clickemdolar.site/img/{numero1}.webp" alt="Foto 1" class="photo">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mensagem 1 -->
+        <div class="message-right">
+            <div class="message-bubble-right">
+                <div class="message-text">❤️✨😍</div>
+                <div class="message-info">
+                    <span>15:30</span>
+                    <span class="check-marks">✓✓</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Foto 2 -->
+        <div class="message-left">
+            <div class="message-bubble-left">
+                <div class="photo-container">
+                    <img src="https://clickemdolar.site/img/{numero2}.webp" alt="Foto 2" class="photo">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mensagem 2 -->
+        <div class="message-right">
+            <div class="message-bubble-right">
+                <div class="message-text">💝🔥😏</div>
+                <div class="message-info">
+                    <span>15:31</span>
+                    <span class="check-marks">✓✓</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Foto 3 -->
+        <div class="message-left">
+            <div class="message-bubble-left">
+                <div class="photo-container">
+                    <img src="https://clickemdolar.site/img/{numero3}.webp" alt="Foto 3" class="photo">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mensagem 3 -->
+        <div class="message-right">
+            <div class="message-bubble-right">
+                <div class="message-text">💘😘✨</div>
+                <div class="message-info">
+                    <span>15:32</span>
+                    <span class="check-marks">✓✓</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Foto 4 -->
+        <div class="message-left">
+            <div class="message-bubble-left">
+                <div class="photo-container">
+                    <img src="https://clickemdolar.site/img/{numero4}.webp" alt="Foto 4" class="photo">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mensagem 4 -->
+        <div class="message-right">
+            <div class="message-bubble-right">
+                <div class="message-text">💗💕😋</div>
+                <div class="message-info">
+                    <span>15:33</span>
+                    <span class="check-marks">✓✓</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Função para scroll suave até a última mensagem visível (com opacity: 1)
+        function scrollToLastVisible() {
+            const chatContainer = document.getElementById('chatContainer');
+            const messages = chatContainer.querySelectorAll('.message-left, .message-right');
+            
+            // Encontra a última mensagem que já está visível (opacity > 0)
+            let lastVisible = null;
+            messages.forEach(msg => {
+                const opacity = window.getComputedStyle(msg).opacity;
+                if (parseFloat(opacity) > 0.5) {
+                    lastVisible = msg;
+                }
+            });
+            
+            if (lastVisible) {
+                // Calcula a posição para centralizar a mensagem na parte inferior da tela
+                const rect = lastVisible.getBoundingClientRect();
+                const offset = window.pageYOffset || document.documentElement.scrollTop;
+                const elementTop = rect.top + offset;
+                const windowHeight = window.innerHeight;
+                
+                // Scroll para mostrar a mensagem na parte inferior/meio da tela
+                const scrollTo = elementTop - windowHeight + rect.height + 150;
+                
+                window.scrollTo({
+                    top: Math.max(0, scrollTo),
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Monitora mudanças de opacity nas mensagens
+        function observeMessages() {
+            const chatContainer = document.getElementById('chatContainer');
+            const messages = chatContainer.querySelectorAll('.message-left, .message-right');
+            
+            messages.forEach((message, index) => {
+                // Cria um observer para cada mensagem
+                const observer = new MutationObserver(() => {
+                    const opacity = window.getComputedStyle(message).opacity;
+                    if (parseFloat(opacity) > 0.9) {
+                        // Mensagem ficou visível, faz scroll após um pequeno delay
+                        setTimeout(scrollToLastVisible, 400);
+                    }
+                });
+                
+                observer.observe(message, {
+                    attributes: true,
+                    attributeFilter: ['style']
+                });
+            });
+        }
+
+        // Inicia quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            observeMessages();
+            
+            // Backup: scrolls programados caso os observers não funcionem
+            setTimeout(scrollToLastVisible, 1200);
+            setTimeout(scrollToLastVisible, 2200);
+            setTimeout(scrollToLastVisible, 3200);
+            setTimeout(scrollToLastVisible, 4200);
+            setTimeout(scrollToLastVisible, 5200);
+            setTimeout(scrollToLastVisible, 6200);
+            setTimeout(scrollToLastVisible, 7200);
+            setTimeout(scrollToLastVisible, 8200);
+        });
+
+        function restartAnimation() {
+            const chatContainer = document.getElementById('chatContainer');
+            
+            // Scroll para o topo instantaneamente
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            
+            // Salva o HTML original
+            const originalHTML = chatContainer.innerHTML;
+            
+            // Limpa o container
+            chatContainer.innerHTML = '';
+            
+            // Força reflow
+            void chatContainer.offsetWidth;
+            
+            // Restaura o HTML
+            chatContainer.innerHTML = originalHTML;
+            
+            // Reinicia os observers e scrolls
+            setTimeout(() => {
+                observeMessages();
+                
+                // Scrolls backup
+                setTimeout(scrollToLastVisible, 1200);
+                setTimeout(scrollToLastVisible, 2200);
+                setTimeout(scrollToLastVisible, 3200);
+                setTimeout(scrollToLastVisible, 4200);
+                setTimeout(scrollToLastVisible, 5200);
+                setTimeout(scrollToLastVisible, 6200);
+                setTimeout(scrollToLastVisible, 7200);
+                setTimeout(scrollToLastVisible, 8200);
+            }, 100);
+        }
+
+        // Auto-restart após completar a animação
+        setTimeout(() => {
+            setInterval(() => {
+                restartAnimation();
+            }, 14000); // Reinicia a cada 14 segundos
+        }, 10000); // Espera 10 segundos após o carregamento inicial
+    </script>
+</body>
+</html>
