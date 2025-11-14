@@ -29,6 +29,11 @@ async function gerarVideo(id) {
     const temp = `temp_${id}.html`;
     fs.writeFileSync(temp, html);
 
+    const videoPath = `videos/video_${id}.mp4`;
+    const videoPathAbsolute = `${process.cwd()}\\videos\\video_${id}.mp4`;
+
+    console.log(`🌐 Abrindo navegador...`);
+
     // Abrir Chrome visível para o Windows reconhecer a janela
     const browser = await puppeteer.launch({
         headless: false,
@@ -36,6 +41,7 @@ async function gerarVideo(id) {
             "--no-sandbox",
             "--disable-setuid-sandbox",
             "--window-size=1080,1920",
+            "--window-position=0,0",
             `--app=file://${process.cwd()}/${temp}` // evita múltiplas abas
         ]
     });
@@ -44,20 +50,54 @@ async function gerarVideo(id) {
     const page = pages[0]; // usa somente a primeira aba
     await page.setViewport({ width: 1080, height: 1920 });
 
-    const videoPath = `videos/video_${id}.mp4`;
+    // Aguardar a página carregar completamente
+    await page.waitForSelector('.chat-container', { timeout: 10000 });
 
-    console.log(`🎥 Gravando vídeo ${id}...`);
+    console.log(`⏳ Aguardando 3 segundos para o navegador estabilizar...`);
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
+    console.log(`🎥 Iniciando gravação do vídeo ${id}...`);
+
+    // Iniciar ffmpeg com captura de erros
     const ffmpeg = exec(
-        `ffmpeg -y -f gdigrab -framerate 30 -offset_x 0 -offset_y 0 -video_size 1080x1920 -i title="Chrome" -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -t 24 "${videoPath}"`
+        `ffmpeg -y -f gdigrab -framerate 30 -video_size 1080x1920 -i desktop -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -t 24 "${videoPathAbsolute}"`,
+        (error, stdout, stderr) => {
+            if (error) {
+                console.error(`❌ Erro no FFmpeg: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.log(`📹 FFmpeg: ${stderr.substring(0, 200)}...`);
+            }
+        }
     );
 
-    await new Promise((resolve) => ffmpeg.on("close", resolve));
+    // Aguardar o ffmpeg terminar (24 segundos + margem)
+    await new Promise((resolve) => {
+        ffmpeg.on("close", (code) => {
+            console.log(`📹 FFmpeg finalizou com código: ${code}`);
+            resolve();
+        });
+    });
 
+    console.log(`🔒 Fechando navegador...`);
     await browser.close();
-    fs.unlinkSync(temp);
 
-    console.log(`✅ Vídeo salvo: ${videoPath}`);
+    // Aguardar um pouco antes de deletar o arquivo temp
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (fs.existsSync(temp)) {
+        fs.unlinkSync(temp);
+    }
+
+    // Verificar se o vídeo foi realmente criado
+    if (fs.existsSync(videoPath)) {
+        const stats = fs.statSync(videoPath);
+        console.log(`✅ Vídeo salvo: ${videoPath} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
+    } else {
+        console.error(`❌ ERRO: Vídeo não foi criado em ${videoPath}`);
+        console.error(`   Verifique se o FFmpeg está instalado: https://ffmpeg.org/download.html`);
+    }
 }
 
 (async () => {
