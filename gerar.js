@@ -32,7 +32,10 @@ async function gerarVideo(id) {
     const videoPath = `videos/video_${id}.mp4`;
     const videoPathAbsolute = `${process.cwd()}\\videos\\video_${id}.mp4`;
 
-    console.log(`🌐 Abrindo navegador...`);
+    // Título único para a janela para o FFmpeg capturar
+    const windowTitle = `VideoCapture_${id}_${Date.now()}`;
+
+    console.log(`🌐 Abrindo navegador com título: ${windowTitle}...`);
 
     // Abrir Chrome visível para o Windows reconhecer a janela
     const browser = await puppeteer.launch({
@@ -42,7 +45,7 @@ async function gerarVideo(id) {
             "--disable-setuid-sandbox",
             "--window-size=1080,1920",
             "--window-position=0,0",
-            `--app=file://${process.cwd()}/${temp}` // evita múltiplas abas
+            `--app=file://${process.cwd()}/${temp}?title=${windowTitle}` // evita múltiplas abas
         ]
     });
 
@@ -53,14 +56,19 @@ async function gerarVideo(id) {
     // Aguardar a página carregar completamente
     await page.waitForSelector('.chat-container', { timeout: 10000 });
 
-    console.log(`⏳ Aguardando 3 segundos para o navegador estabilizar...`);
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Definir título da janela via JavaScript
+    await page.evaluate((title) => {
+        document.title = title;
+    }, windowTitle);
 
-    console.log(`🎥 Iniciando gravação do vídeo ${id}...`);
+    console.log(`⏳ Aguardando 5 segundos para o navegador estabilizar e janela ser reconhecida...`);
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
-    // Iniciar ffmpeg com captura de erros
+    console.log(`🎥 Iniciando gravação do vídeo ${id} capturando janela "${windowTitle}"...`);
+
+    // Iniciar ffmpeg capturando a janela específica com captura de erros
     const ffmpeg = exec(
-        `ffmpeg -y -f gdigrab -framerate 30 -video_size 1080x1920 -i desktop -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -t 24 "${videoPathAbsolute}"`,
+        `ffmpeg -y -f gdigrab -framerate 30 -i title="${windowTitle}" -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -t 24 "${videoPathAbsolute}"`,
         (error, stdout, stderr) => {
             if (error) {
                 console.error(`❌ Erro no FFmpeg: ${error.message}`);
