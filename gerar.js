@@ -33,13 +33,18 @@ async function gerarVideo(id) {
     const videoPathAbsolute = `${process.cwd()}\\videos\\video_${id}.mp4`;
 
     // Dimensões do vídeo - formato 9:16 (Stories/Reels)
-    // Ajustado para 810x1440 para caber em telas ultrawide (1440p altura)
-    const videoWidth = 810;
-    const videoHeight = 1440;
+    // Reduzido em 20%: 810x1440 → 648x1152
+    const videoWidth = 648;
+    const videoHeight = 1152;
+
+    // Offset para capturar apenas a área do navegador (ajustar se necessário)
+    // Considera barra de título do Windows (~30-40px)
+    const captureOffsetX = 8; // Borda esquerda do Windows
+    const captureOffsetY = 30; // Barra de título do Windows
 
     console.log(`🌐 Abrindo navegador (${videoWidth}x${videoHeight})...`);
 
-    // Abrir Chrome visível em modo kiosk (tela cheia da janela)
+    // Abrir Chrome visível com tamanho exato para captura
     const browser = await puppeteer.launch({
         headless: false,
         args: [
@@ -49,6 +54,8 @@ async function gerarVideo(id) {
             "--window-position=0,0",
             "--force-device-scale-factor=1",
             "--disable-gpu",
+            "--disable-infobars",
+            "--disable-features=TranslateUI",
             `--app=file://${process.cwd()}/${temp}`
         ]
     });
@@ -60,15 +67,15 @@ async function gerarVideo(id) {
     // Aguardar a página carregar completamente
     await page.waitForSelector('.chat-container', { timeout: 10000 });
 
-    console.log(`⏳ Aguardando 3 segundos para o navegador estabilizar...`);
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    console.log(`⏳ Aguardando 2 segundos para renderização inicial...`);
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-    console.log(`🎥 Iniciando gravação do vídeo ${id}...`);
-    console.log(`   Capturando região: ${videoWidth}x${videoHeight} a partir de (0,0)`);
+    console.log(`🎥 Iniciando gravação do vídeo ${id} por 25 segundos...`);
+    console.log(`   Capturando região: ${videoWidth}x${videoHeight} a partir de (${captureOffsetX},${captureOffsetY})`);
 
-    // Iniciar ffmpeg capturando região específica do desktop
+    // Iniciar ffmpeg capturando apenas a área interna do navegador
     const ffmpeg = exec(
-        `ffmpeg -y -f gdigrab -framerate 30 -offset_x 0 -offset_y 0 -video_size ${videoWidth}x${videoHeight} -i desktop -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -t 24 "${videoPathAbsolute}"`,
+        `ffmpeg -y -f gdigrab -framerate 30 -offset_x ${captureOffsetX} -offset_y ${captureOffsetY} -video_size ${videoWidth}x${videoHeight} -i desktop -vcodec libx264 -preset ultrafast -pix_fmt yuv420p -t 25 "${videoPathAbsolute}"`,
         (error, stdout, stderr) => {
             if (error) {
                 console.error(`❌ Erro no FFmpeg: ${error.message}`);
@@ -81,7 +88,7 @@ async function gerarVideo(id) {
         }
     );
 
-    // Aguardar o ffmpeg terminar (24 segundos + margem)
+    // Aguardar o ffmpeg terminar (25 segundos exatos + margem de segurança)
     await new Promise((resolve) => {
         ffmpeg.on("close", (code) => {
             console.log(`📹 FFmpeg finalizou com código: ${code}`);
